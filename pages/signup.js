@@ -1,11 +1,14 @@
 import React,{useState} from 'react';
-import { StyleSheet, Button, TextInput, View, Text } from 'react-native';
+import { StyleSheet, Button, TextInput, View, Text, Alert } from 'react-native';
 import { mainStyles } from '../styles/main';
 import { Formik } from 'formik';
 import * as yup from 'yup';
-import { color } from 'react-native-reanimated';
+import { color, set } from 'react-native-reanimated';
 
 const reviewSchema = yup.object({
+    username: yup.string()
+        .required()
+        .min(4),
     email: yup.string()
         .required()
         .min(4),
@@ -14,24 +17,42 @@ const reviewSchema = yup.object({
         .min(8),
 });
 
-export default function Home({navigation}){
+export default function Signup({navigation}){
 
-    const signup1 = () => {
-        navigation.push('Signup');
-    };
-
+    const[j,setj]=useState([]);
+    const add = (values) => {
+        fetch('https://reqres.in/api/users',{
+            method:'post',
+            body:JSON.stringify({
+                name: values.username,
+                job: values.email,
+                //password: values.password
+            })
+        }).then((response) => response.json())
+        .then((json) => setj(json))
+        .catch((error) => console.error(error));
+        Alert.alert('good','good');
+    }
     return(
         <View style={mainStyles.container}>
             <Formik
-            initialValues={{ email: '', password: ''}}
+            initialValues={{username:'', email: '', password: ''}}
             validationSchema={reviewSchema}
             onSubmit={(values, actions) => {
-                //actions.resetForm(); 
-                navigation.push('Table');
+                //actions.resetForm();
+                add(values);
             }}
             >
                 {props => (
                     <View>
+                        <TextInput
+                            style={mainStyles.input}
+                            placeholder='Enter username'
+                            onChangeText={props.handleChange('username')}
+                            onBlur={props.handleBlur('username')} 
+                            value={props.values.username}
+                        />
+                        <Text style={mainStyles.errorText}>{props.touched.username && props.errors.username}</Text>
                         <TextInput
                             style={mainStyles.input}
                             placeholder='Enter Email'
@@ -51,20 +72,12 @@ export default function Home({navigation}){
                         />
                         <Text style={mainStyles.errorText}>{props.touched.Password && props.errors.Password}</Text>
                 
-                        <Button onPress={props.handleSubmit} title='SignIn' />
+                        <Button onPress={props.handleSubmit} title='SignUp' />
+
                     </View>
                 )}
             </Formik>
-            <View  style={styles.buttons}>
-                <Button  onPress={signup1} title='SignUp' />
-            </View>
             
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    buttons:{
-        margin: 60,
-    }
-})
